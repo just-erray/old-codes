@@ -1,0 +1,4 @@
+ - Learn Centroid and hl properly 
+ - Learn DSU tree 
+ - Graph Template
+ - HL - Centroid Decomp
