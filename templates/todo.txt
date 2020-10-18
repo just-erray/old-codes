@@ -1,4 +1,5 @@
  - Learn Centroid and hl properly 
  - Learn DSU tree 
- - Graph Template
+ + Graph Template
  - HL - Centroid Decomp
+ - Dinic Template

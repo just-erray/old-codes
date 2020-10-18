@@ -60,28 +60,43 @@ template<typename Head, typename... Tail> void debug_out(Head H, Tail... T) {
 #else
 #define debug(...) (void) 37
 #endif
-
  
 int main () {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
-  vector<string> a; 
-  while (!cin.eof()) {
+  int T;
+  cin >> T;
+  while (T--) {
+    int n;
     string s;
-    cin >> s;
-    a.push_back(s);
-  }
-
-  sort(a.begin(), a.end());
-  long long ans = 0;
-  for (int i = 0; i < (int) a.size(); ++i) {
-    long long x = 0;
-    for (char c : a[i]) {
-      x += c - 'A' + 1;
+    cin >> n >> s;
+    vector<int> lead;
+    int add = 1;
+    for (int i = 1; i < n; ++i) {
+      if (s[i] != s[i - 1]) {
+        lead.push_back(add);
+        add = 0;
+      }
+      ++add;
     }
-    debug(a[i], x);
-    x *= (i + 1);
-    ans += x;
+    lead.push_back(add);
+    reverse(lead.begin(), lead.end());
+    int p = (int) lead.size() - 1;
+    int ans = 0;
+    while (p >= 0 && !lead.empty()) {
+      debug(lead, p);
+      while (p >= 0 && (p >= (int) lead.size() || lead[p] == 1)) {
+        --p;
+      }
+      if (p >= 0) {
+        --lead[p];
+      } else {
+        break;
+      }
+      ++ans;
+      lead.pop_back();
+    }
+    debug(ans, lead);
+    cout << ans + ((int) lead.size() + 1) / 2 << '\n';
   }
-  cout << ans << '\n';
 }

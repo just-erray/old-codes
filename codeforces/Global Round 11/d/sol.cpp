@@ -60,28 +60,84 @@ template<typename Head, typename... Tail> void debug_out(Head H, Tail... T) {
 #else
 #define debug(...) (void) 37
 #endif
-
  
 int main () {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
-  vector<string> a; 
-  while (!cin.eof()) {
-    string s;
-    cin >> s;
-    a.push_back(s);
+  int n;
+  cin >> n;
+  vector<int> a(n);
+  for (int i = 0; i < n; ++i) {
+    cin >> a[i];
+    --a[i];
   }
+  vector<vector<int>> ans;
 
-  sort(a.begin(), a.end());
-  long long ans = 0;
-  for (int i = 0; i < (int) a.size(); ++i) {
-    long long x = 0;
-    for (char c : a[i]) {
-      x += c - 'A' + 1;
+  while (!is_sorted(a.begin(), a.end())) {
+    vector<int> pos(n);
+    for (int i = 0; i < n; ++i) {
+      pos[a[i]] = i;
     }
-    debug(a[i], x);
-    x *= (i + 1);
-    ans += x;
+    int ch = 0;
+    for (int i = 1; i < n; ++i) {
+      if (pos[i] < pos[i - 1]) {
+        ch = i;
+      }
+    }
+
+    int l = pos[ch], r = pos[ch - 1];
+    vector<int> new_a;
+    vector<int> add;
+    vector<int> can;
+    for (int i = 1; i < n; ++i) {
+      if (a[i] != a[i - 1] + 1) {
+        can.push_back(i);
+      }
+    }
+    // l = p[i][0], r = p[i + 1][lst]
+    if (l > 0) {
+      add.push_back(l);
+    }
+    int ps = *lower_bound(can.begin(), can.end(), l + 1);
+    assert(ps <= r);
+
+    add.push_back(ps - l);
+    add.push_back(r - ps + 1);
+    
+    if (r < n - 1) {
+      add.push_back(n - 1 - r);
+    }
+    
+    assert(accumulate(add.begin(), add.end(), 0) == n);
+    ans.push_back(add);
+
+    vector<vector<int>> div((int) add.size());
+    int p = 0;
+
+    for (int i = 0; i < n; ++i) {
+      if (add[p] == 0) {
+        ++p;
+      }
+      --add[p];
+      div[p].push_back(a[i]);
+    }
+    reverse(div.begin(), div.end());
+    for (auto vv : div) {
+      for (auto el : vv) {
+        new_a.push_back(el);
+      }
+    }
+    swap(new_a, a);
+    debug(a);
   }
-  cout << ans << '\n';
+  assert((int) ans.size() <= n);
+  
+  cout << (int) ans.size() << '\n';
+  for (auto el : ans) {
+    cout << (int) el.size() << '\n';
+    for (auto e : el) {
+      cout << e << ' ';
+    }
+    cout << '\n';
+  }
 }

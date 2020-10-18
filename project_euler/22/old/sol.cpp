@@ -60,28 +60,28 @@ template<typename Head, typename... Tail> void debug_out(Head H, Tail... T) {
 #else
 #define debug(...) (void) 37
 #endif
-
  
 int main () {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
-  vector<string> a; 
+  vector<string> a;
   while (!cin.eof()) {
     string s;
     cin >> s;
     a.push_back(s);
   }
-
   sort(a.begin(), a.end());
-  long long ans = 0;
+  __int128_t ans = 0;
   for (int i = 0; i < (int) a.size(); ++i) {
-    long long x = 0;
-    for (char c : a[i]) {
-      x += c - 'A' + 1;
-    }
-    debug(a[i], x);
-    x *= (i + 1);
-    ans += x;
+    int sum = accumulate(a[i].begin(), a[i].end(), 0) - (int) a.size() * ('A' - 1);
+    ans += 1LL * (i + 1) * sum;     
   }
-  cout << ans << '\n';
+  string res;
+  while (ans > 0) {
+    debug(char('0' + char(ans % 10)));
+    res += '0' + char(ans % 10);
+    ans /= 10;
+  }
+  reverse(res.begin(), res.end());
+  cout << res;
 }
