@@ -61,6 +61,7 @@ template<typename Head, typename... Tail> void debug_out(Head H, Tail... T) {
 #define debug(...) (void) 37
 #endif
 
+
 template<typename T> class graph {
   public:
   struct edge {
@@ -92,61 +93,7 @@ template<typename T> class graph {
 
   virtual int add(int v, int u, T w = 1) = 0; 
 };
-
-template<typename T> class digraph : public graph<T> {
-  public:    
-  using graph<T>::n;  
-  using graph<T>::g;
-  using graph<T>::edges;
-
-  digraph(int _n) : graph<T>(_n) { }
-  
-  digraph(const digraph<T>& _g) : graph<T>() {
-    n = _g.n;
-    g = _g.g;
-    edges = _g.edges;
-  }
-
-  int add(int v, int u, T w = 1) {
-    assert(v >= 0 && u >= 0 && v < n && u < n);
-    int id = (int) edges.size();
-    g[v].push_back(id);
-    g[u].push_back(id); //for reverse edges
-    edges.push_back({v, u, w});
-    return id;
-  }
-
-  void reverse() {
-    for (auto& el : edges) {
-      swap(el.u, el.v);
-    }
-  }
-};
-
-template<typename T> class undigraph : public graph<T> {
-  public:    
-  using graph<T>::n;  
-  using graph<T>::g;
-  using graph<T>::edges;
-  
-  undigraph(int _n) : graph<T>(_n) { }
-   
-  undigraph(const undigraph<T>& _g) : graph<T>() {
-    n = _g.n;
-    g = _g.g;
-    edges = _g.edges;
-  }
-
-  int add(int v, int u, T w = 1) {
-    assert(v >= 0 && u >= 0 && v < n && u < n);
-    int id = (int) edges.size();
-    g[v].push_back(id);
-    g[u].push_back(id);
-    edges.push_back({v, u, w});
-    return id;
-  }
-};
-
+ 
 template<typename T> class forest : public graph<T> {
   public:    
   using graph<T>::n;  
@@ -171,6 +118,7 @@ template<typename T> class forest : public graph<T> {
     return id;
   }
 };
+
 
 template<typename T> class dfs_forest : public forest<T> {
   public:
@@ -249,290 +197,198 @@ template<typename T> class dfs_forest : public forest<T> {
   dfs_forest(int _n) : forest<T>(_n) { }
 
   dfs_forest(const forest<T> _g) : forest<T>(_g) { }
-
+  
 };
 
-template<typename T> vector<int> top_sort(const digraph<T>& g) {
-  vector<int> deg(g.n);
-  for (int i = 0; i < g.n; ++i) {
-    for (auto id : g.g[i]) {
-      if (g.edges[id].u == i) {
-        ++deg[i];
-      }
-    }
-  }
-  queue<int> q;
-  vector<int> res;
-  res.reserve(g.n);
-  for (int i = 0; i < g.n; ++i) {
-    if (deg[i] == 0) {
-      q.push(i);
-    }        
-  }
-  while (!q.empty()) {
-    int v = q.front();
-    q.pop();
-    res.push_back(v);
-    for (auto id : g.g[v]) {
-      if (g.edges[id].v == v) {
-        int u = g.edges[id].u;
-        if (--deg[u] == 0) {
-          q.push(u);
-        }
-      }
-    } 
-  }
-  return res;
-}
 
-template<typename T> vector<T> djikstra(const undigraph<T>& g, int sv) {
-  assert(sv < g.n);
-  vector<T> res(g.n, numeric_limits<T>::max());
-  vector<bool> vis(g.n);
-  priority_queue<pair<T, int>, vector<pair<T, int>>, greater<pair<T, int>>> pq;
-  pq.emplace(0, sv);
-  res[sv] = 0;
-  while (!pq.empty()) {
-    int v;
-    T cost;
-    tie(cost, v) = pq.top();
-    pq.pop();
-    if (vis[v]) {
-      continue;
-    }
-    vis[v]  = true;
-    for (auto id : g.g[v]) {
-      int nxt = g.edges[id].u ^ g.edges[id].v ^ v;
-      T nCost = cost + g.edges[id].w;
-      if (vis[nxt] || res[nxt] < nCost) {
-        continue;
-      }
-      res[nxt] = nCost;
-      pq.emplace(nCost, nxt);
-    }
-  }
-  return res; 
-}
+template<typename T> class lca_lift : public dfs_forest<T> {
+  public:    
+  using dfs_forest<T>::n;  
+  using dfs_forest<T>::edges;
+  using dfs_forest<T>::depth;
+  using dfs_forest<T>::parent;
+  using dfs_forest<T>::dfs;
+  using dfs_forest<T>::edge;
 
-template<typename T> vector<T> djikstra_set(const undigraph<T>& g, int sv) {
-  assert(sv < g.n);
-  vector<T> res(g.n, numeric_limits<T>::max());
-  vector<bool> vis(g.n);
-  set<pair<T, int>> pq;
-  pq.emplace(0, sv);
-  res[sv] = 0;
-  while (!pq.empty()) {
-    int v;
-    T cost;
-    tie(cost, v) = *pq.begin();
-    pq.erase(pq.begin());
-    if (vis[v]) {
-      continue;
-    }
-    vis[v]  = true;
-    for (auto id : g.g[v]) {
-      int nxt = g.edges[id].u ^ g.edges[id].v ^ v;
-      T nCost = cost + g.edges[id].w;
-      if (vis[nxt] || res[nxt] < nCost) {
-        continue;
-      }
-      res[nxt] = nCost;
-      pq.emplace(nCost, nxt);
-    }
-  }
-  return res; 
-}
-
-template<typename T> vector<T> djikstra_sq(const undigraph<T>& g, int sv) {
-  assert(sv < g.n);
-  vector<T> res(g.n, numeric_limits<T>::max());
-  vector<bool> vis(g.n);
-  queue<int> q;  
-  res[sv] = 0;
-  q.push(sv);
-  vector<vector<T>> mat(g.n, vector<T>(g.n, -1));
-  for (auto[v, u, w] : g.edges) {
-   mat[u][v] = w;
-   mat[v][u] = w;
-  }
-  int v = sv;
-  while (v != -1) {
-    vis[v] = true;
-    int next_v = -1;
-    T next_cost = numeric_limits<T>::max();
-    for (int i = 0; i < g.n; ++i) {
-      if (mat[v][i] != -1) {
-        res[i] = min(res[i], res[v] + mat[v][i]); 
-      }
-      if (!vis[i] && res[i] < next_cost) {
-        next_cost = res[i];
-        next_v = i;
-      }
-    }
-    v = next_v;
-  }
-  return res; 
-}
-
-class dsu {
-  public:
-  vector<int> par, ct;
-  dsu(int n) {
-    par.resize(n);
-    ct.resize(n, 1);
-    iota(par.begin(), par.end(), 0);
-  }  
-  inline int get(int v) {
-    return par[v] = (v == par[v] ? v : get(par[v]));    
-  }
-  inline bool unite(int x, int y) {
-    x = get(x);
-    y = get(y);
-    if (x == y) return false;
-    ct[x] += ct[y];
-    par[y] = x;
-    return true;  
-  }
-};
-
-template<typename T> vector<int> mst(const forest<T>& g) {
-  vector<int> res;
-  vector<int> ord(g.n);
-  iota(ord.begin(), ord.end(), 0);
-  sort(ord.begin(), ord.end(), [&](int x, int y) {
-    return g.edges[x].w < g.edges[y].w;
-  });
-  dsu d(g.n);
-  for (auto id : ord) {
-    if (d.unite(g.edges[id].v, g.edges[id].u)) {
-      res.push_back(id);  
-    }
-  }
-  return res;
-}
-
-template<typename T> class dfs_tree : public undigraph<T> {
-  public:
-  using undigraph<T>::n;  
-  using undigraph<T>::g;
-  using undigraph<T>::edges;
-
-  vector<int> depth, parent, root, sz, edge, back, child, order;
-  vector<T> dist;
-  vector<bool> is_back;
+  int lg = -1;
+  vector<vector<int>> mat;
 
   void clear() {
-    depth.clear();
-    parent.clear();
-    root.clear();
-    sz.clear();
-    edge.clear();
-    depth.clear();
-    dist.clear();
-    back.clear();
-    child.clear();
-    order.clear(); 
-    is_back.clear();
-  }
-
-  void init() {
-    depth.resize(n, 0);
-    parent.resize(n, -1);
-    root.resize(n, -1);
-    sz.resize(n, 1);
-    edge.resize(n, -1);
-    depth.resize(n, 0);
-    dist.resize(n, T{});
-    back.resize(n, 0);
-    child.resize(n, 0);
-    is_back.resize((int) edges.size(), true);
+    mat.clear();
+    lg = -1;    
   }
 
   private:
-  void Dfs(int v) {
-    order.push_back(v);
-    for (auto id : g[v]) {
-      auto e = edges[id];
-      int nxt = e.u ^ e.v ^ v;
-      if (nxt == parent[v]) {
-        continue;
-      }
-      if (parent[nxt] == -1 && root[v] != nxt) {
-        is_back[id] = false;
-        depth[nxt] = depth[v] + 1;
-        parent[nxt] = v;
-        root[nxt] = root[v];
-        edge[nxt] = id;
-        dist[nxt] = dist[v] + e.w;
-        Dfs(nxt);
-        ++child[v];
-        sz[v] += sz[nxt];
-        back[v] += back[nxt];
-      } else if (depth[nxt] < depth[v]) {
-        ++back[v];
-      } else {
-        --back[v];      
-      }
-    }
+  void init() {
+    lg = 32 - __builtin_clz(n);
+    mat.resize(lg, vector<int>(n));
   }
-
-  void root_dfs(int v) {
-    root[v] = v;
-    Dfs(v);
-  }
-
 
   public:
-  void dfs(int v) {
-    if (depth.empty()) {
-      init();
+  void build(int r = 0) {
+    dfs(r);
+    mat[0] = parent;
+    mat[0][r] = r;
+    for (int j = 1; j < lg; ++j) {
+      for (int i = 0; i < n; ++i) {
+        mat[j][i] = mat[j - 1][mat[j - 1][i]];
+      }
     }
-    root_dfs(v);
   }
   
-  void dfs_all() {
-    if (order.empty()) {
-      init();
+  int get(int v, int u) {
+    if (depth[u] > depth[v]) {
+      swap(v, u);
     }
-    for (int i = 0; i < n; ++i) {
-      if (parent[i] == -1) {
-        root_dfs(i);
+    int f = depth[v] - depth[u];
+    int up = 0;
+    while (f) {
+      if (f & 1) {
+        v = mat[up][v];  
       }
-    }    
+      f >>= 1;
+      ++up;
+    }
+    for (int j = lg - 1; j >= 0; --j) {
+      if (mat[j][u] != mat[j][v]) {
+        v = mat[j][v];
+        u = mat[j][u];
+      }
+    }
+    if (u != v) {
+      v = mat[0][v];
+    }
+    return v;
+  }
+  
+  lca_lift(forest<T> x) : dfs_forest<T>(x) {
+    init();
   }
 
-  dfs_tree(int _n) : undigraph<T>(_n) { }
-
-  dfs_tree(const undigraph<T> _g) : undigraph<T>(_g) { }
+  lca_lift(int _n) : dfs_forest<T>(_n) {
+    init();
+  }
 
 };
 
-template<typename T> vector<bool> bridges(dfs_tree<T> d) {
-  if (d.depth.empty()) {
-    d.dfs_all();
-  }
-  vector<bool> is((int) d.edges.size());
-  for (int i = 0; i < d.n; ++i) {
-    if (d.parent[i] == -1) {
-      continue;
-    }
-    if (d.back[i] == 0) {
-      is[d.edge[i]] = true;
-    }
-  }
-  return is;
-}
+template<typename T, typename M, typename F = function<T(const T&, const T&)>> 
+class lift : public lca_lift<M> {
+  public:
+  using lca_lift<M>::n;
+  using lca_lift<M>::edges;
+  using lca_lift<M>::depth;
+  using lca_lift<M>::mat;
+  using lca_lift<M>::build;    
+  using lca_lift<M>::edge;
 
+  int l = -1;
+  vector<vector<T>> t;
+  F cal = nullptr;
+  T def;
 
+  void clear() {
+    t.clear();
+    l = -1;
+    cal = nullptr;
+  }
+
+  void init() {
+    l = 32 - __builtin_clz(n);
+    t.resize(l, vector<T>(n));
+  }
+
+  void build() {
+    vector<T> res(n, def);
+    build(0);
+    for (int i = 0; i < n; ++i) {
+      if (edge[i] == -1) {
+        continue;
+      }
+      res[i] = edges[edge[i]].w;
+    }
+    build(res);
+  }
+  
+  void build(vector<T> values) {
+    if (mat[0][0] == -1) {
+      build(0);  
+    }
+    t[0] = values;
+    for (int j = 1; j < l; ++j) {
+      for (int i = 0; i < n; ++i) {
+        int par = mat[j - 1][i];
+        t[j][i] = cal(t[j - 1][i], t[j - 1][par]);
+      }  
+    }
+  }
+
+  T get(int v, int u, bool node = false) {
+    T res = def;
+    if (depth[v] < depth[u]) {
+      swap(v, u);
+    }
+    int f = depth[v] - depth[u];
+    int up = 0;
+    while (f) {
+      if (f & 1) {
+        res = cal(res, t[up][v]);
+        v = mat[up][v];  
+      }
+      f >>= 1;
+      ++up;
+    }
+    for (int j = l - 1; j >= 0; --j) {
+      if (mat[j][u] != mat[j][v]) {
+        res = cal(res, t[j][v]);
+        res = cal(res, t[j][u]);
+        v = mat[j][v];
+        u = mat[j][u];
+      }
+    }
+    if (u != v) {
+      res = cal(t[0][v], res);
+      res = cal(t[0][u], res);
+      v = u = mat[0][v];
+    }
+    if (node) {
+      // if values are on nodes, not edges
+      res = cal(res, t[0][v]);
+    }
+    return res;
+  }
+
+  lift(int _n, T _def, F _cal) : lca_lift<M>(_n), def(_def), cal(_cal) {
+    init();        
+  }
+
+  lift(forest<M> f, T _def, F _cal) : lca_lift<M>(f), def(_def), cal(_cal) {
+    init();    
+  }
+
+};
+ 
 int main () {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
-  int n = (int) 1e5;
-  int m = (int) 3e5;
-  undigraph<int> g(n);
+  int n;
+  cin >> n;
+  forest<int> f(n);
+  for (int i = 0; i < n - 1; ++i) {
+    int x, y, w;
+    cin >> x >> y >> w;
+    --x, --y;
+    f.add(x, y, w);
+  }  
+  lift<long long, int> l(f, 0, [&](auto x, auto y) {
+    return x + y;
+  });
+  l.build();
+  int m;
+  cin >> m;
   while (m--) {
-    g.add(rng() % n, rng() % n);    
+    int x, y;
+    cin >> x >> y;
+    --x, --y;
+    cout << l.get(x, y) << '\n';
   }
-  dfs_tree d(g);
-  d.dfs_all();
 }
