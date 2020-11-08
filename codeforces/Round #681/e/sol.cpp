@@ -2,7 +2,6 @@
 #include<bits/stdc++.h>
  
 using namespace std;
-
 template<typename A, typename B> string to_string(const pair<A, B>& p);
 template<typename A, typename B, typename C> string to_string(const tuple<A, B, C>& t);
 template<typename A, typename B, typename C, typename D> string to_string(const tuple<A, B, C, D>& t);
@@ -16,7 +15,7 @@ string to_string(const char& c) {
 }
 
 string to_string(const char *c) {
-  return to_string(string(c)); 
+  return to_string(string(c));
 }
 
 string to_string(const bool& b) {
@@ -65,7 +64,7 @@ template<typename T, class C> string to_string(priority_queue<T, vector<T>, C> p
       res += ", ";
     }
     res += to_string(cur);
-    tmp.push_back(res);
+    tmp.push_back(cur);
   }
   for (auto el : tmp) {
     pq.push(el);
@@ -96,46 +95,105 @@ template<typename A, typename B, typename C, typename D> string to_string(const 
   return '(' + to_string(get<0>(t)) + ", " + to_string(get<1>(t)) + ", " + to_string(get<2>(t)) + ", " + to_string(get<3>(t)) + ')';
 }
 
-void debug_out(int sz, bool b) {
-  queue<int> foo;
-  foo.push(sz);
-  foo.push(b);
+void debug_out(int size, bool first, string name) {
+  vector<string> tmp = {name};
+  vector<int> tmp2 = {size, first};
   cerr << endl;
 }
 
-constexpr int debug_buffer_line = 254;
+constexpr int buffer_size = 255;
 
-#define name_of_the_variable(x) cerr << #x;
-
-template<typename Head, typename... Tail> void debug_out(int sz, bool first, Head cur, Tail... t) {
-  string buf = to_string(cur);
-  if (sz + (int) buf.size() > debug_buffer_line - 15 && !first) {
-    cerr << '\n';
+template<typename Head, typename... Tail> void debug_out(int size, bool first, string name, Head H, Tail... T) {
+  string tmp;
+  int off = 0;
+  while ((!name.empty() && name[0] != ',') || off != 0) {
+    tmp += name[0];
+    name.erase(name.begin());
+    char c = tmp.back();
+    if (c == '{' || c == '(') {
+      ++off;
+    } else if (c == '}' || c == ')'){
+      --off;
+    }
   }
-  cerr << "[";
-  name_of_the_variable(cur);
-  cerr << ": " << buf << "]  ";
-  debug_out((sz + (int) buf.size() + 15) % debug_buffer_line, false, t... ); 
+  if (!name.empty()) {
+    name.erase(name.begin());
+  }
+  if (tmp[0] == ' ') {
+    tmp.erase(tmp.begin());
+  }
+
+  string buff = to_string(H);
+  if ((int) buff.size() + size + (int) tmp.size() > buffer_size - 5 && !first) {
+    cerr << '\n';
+    size = 0;
+  }
+  cerr << '[' << tmp << ": " << buff << "] ";
+  debug_out(((int) buff.size() + size + (int) tmp.size() + 5) % buffer_size, false, name, T...);
 }
 
-#ifdef DEBUG 
-#define debug(...) cerr << "-> ", debug_out(0, true, __VA_ARGS__);
-#else 
-#define debug(...) (void) 37
+#ifdef DEBUG
+#define debug(...) cerr << "-> ", debug_out(3, true, string(#__VA_ARGS__), __VA_ARGS__)
+#define here cerr << "-> " << __LINE__ << endl
+#else
+#define debug(...) void(42)
+#define here void(42)
 #endif
-  
-mt19937 rng((uint32_t) chrono::steady_clock::now().time_since_epoch().count());
  
 int main () {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
-  int n;
-  cin >> n;
-  vector<vector<unsigned int>> mat(n, vector<unsigned int>(n));
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) {
-      mat[i][j] = rng() % 20;
+  int n, q;
+  cin >> n >> q;
+  const int ch = min(20, n);
+  const int con = n - ch;
+  vector<int> cur(ch);
+  iota(cur.begin(), cur.end(), con + 1);
+  vector<long long> fact(21, 1);
+  for (int i = 1; i < 21; ++i) {
+    fact[i] = fact[i - 1] * i;
+  }
+  long long sum = 0;
+
+  while (q--) {
+    debug(cur);
+    int t;
+    cin >> t;
+    if (t == 1) {
+      int l, r;
+      cin >> l >> r;
+      long long ans = 0;
+      {
+        int ll = min(l, con + 1);
+        int rr = min(r, con);
+        debug(ll, rr);
+        ans += 1LL * (rr + 1) * rr / 2 - 1LL * ll * (ll - 1) / 2;
+      }
+      {
+        int ll = max(l, con + 1);
+        debug(ll, r);
+        for (int i = ll; i <= r; ++i) {
+          ans += cur[i - con - 1];
+          debug(cur[i - con - 1]);  
+        }
+      }
+      cout << ans << '\n';
+    } else {
+      int nxt;
+      cin >> nxt;
+      sum += nxt;
+      long long tmp = sum;
+      vector<int> next(ch);
+      iota(next.begin(), next.end(), con + 1);
+      for (int i = 0; i < ch - 1; ++i) {
+        long long took = fact[ch - i - 1];
+        int chose = sum / took;
+        sum %= took;
+        cur[i] = next[chose];
+        next.erase(next.begin() + chose);
+      } 
+      cur.back() = next[0]; 
+      sum = tmp;
     }
   }
-  debug(mat, false);
 }

@@ -16,7 +16,7 @@ string to_string(const char& c) {
 }
 
 string to_string(const char *c) {
-  return to_string(string(c)); 
+  return to_string(string(c));
 }
 
 string to_string(const bool& b) {
@@ -96,46 +96,69 @@ template<typename A, typename B, typename C, typename D> string to_string(const 
   return '(' + to_string(get<0>(t)) + ", " + to_string(get<1>(t)) + ", " + to_string(get<2>(t)) + ", " + to_string(get<3>(t)) + ')';
 }
 
-void debug_out(int sz, bool b) {
-  queue<int> foo;
-  foo.push(sz);
-  foo.push(b);
+void debug_out(int size, bool first, string name) {
+  vector<string> tmp = {name};
+  vector<int> tmp2 = {size, first};
   cerr << endl;
 }
 
-constexpr int debug_buffer_line = 254;
+constexpr int buffer_size = 255;
 
-#define name_of_the_variable(x) cerr << #x;
-
-template<typename Head, typename... Tail> void debug_out(int sz, bool first, Head cur, Tail... t) {
-  string buf = to_string(cur);
-  if (sz + (int) buf.size() > debug_buffer_line - 15 && !first) {
-    cerr << '\n';
+template<typename Head, typename... Tail> void debug_out(int size, bool first, string name, Head H, Tail... T) {
+  string tmp;
+  int off = 0;
+  while ((!name.empty() && name[0] != ',') || off != 0) {
+    tmp += name[0];
+    name.erase(name.begin());
+    char c = tmp.back();
+    if (c == '{' || c == '(') {
+      ++off;
+    } else if (c == '}' || c == ')'){
+      --off;
+    }
   }
-  cerr << "[";
-  name_of_the_variable(cur);
-  cerr << ": " << buf << "]  ";
-  debug_out((sz + (int) buf.size() + 15) % debug_buffer_line, false, t... ); 
+  if (!name.empty()) {
+    name.erase(name.begin());
+  }
+  if (tmp[0] == ' ') {
+    tmp.erase(tmp.begin());
+  }
+
+  string buff = to_string(H);
+  if ((int) buff.size() + size + (int) tmp.size() > buffer_size - 5 && !first) {
+    cerr << '\n';
+    size = 0;
+  }
+  cerr << '[' << tmp << ": " << buff << "] ";
+  debug_out(((int) buff.size() + size + (int) tmp.size() + 5) % buffer_size, false, name, T...);
 }
 
-#ifdef DEBUG 
-#define debug(...) cerr << "-> ", debug_out(0, true, __VA_ARGS__);
-#else 
-#define debug(...) (void) 37
+#ifdef DEBUG
+#define debug(...) cerr << "-> ", debug_out(3, true, string(#__VA_ARGS__), __VA_ARGS__)
+#define here cerr << "-> " << __LINE__ << endl
+#else
+#define debug(...) void(42)
+#define here void(42)
 #endif
-  
-mt19937 rng((uint32_t) chrono::steady_clock::now().time_since_epoch().count());
  
 int main () {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
   int n;
   cin >> n;
-  vector<vector<unsigned int>> mat(n, vector<unsigned int>(n));
+  vector<int> a(n);
   for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) {
-      mat[i][j] = rng() % 20;
-    }
+    cin >> a[i];
   }
-  debug(mat, false);
+
+  debug(a);
+  sort(a.begin(), a.end());
+  vector<int> dp(n);
+  for (int i = 0; i < n; ++i) {
+    vector<int> new_dp(n);
+    for (int j = 0; j < n; ++j) {
+      new_dp[j] = dp[j] += a[i];
+    }
+    swap(dp, new_dp);
+  }
 }
