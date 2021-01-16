@@ -1,0 +1,112 @@
+//author: erray
+#include <bits/stdc++.h>
+
+using namespace std;
+
+int x, y;
+vector<int> m;
+
+pair<vector<int>, long long> answer(vector<int> a, int d) {
+  if ((int) a.size() == 1) {
+    return make_pair(vector<int>(1, m[a[0]]), 0);
+  }
+
+  vector<int> left, right;
+  for (auto e : a) {
+    if ((e >> d) & 1) {
+      right.push_back(e);
+    } else {
+      left.push_back(e);
+    }
+  }  
+  long long rans, lans;
+  vector<int> rvec, lvec;
+  tie(lvec, lans) = answer(left, d + 1);
+  tie(rvec, rans) = answer(right, d + 1);
+  if ((int) lvec.size() + (int) rvec.size() != (int) a.size()) {
+    return make_pair(vector<int>(0), rans + lans + y); 
+  }
+  
+  vector<int> nw;
+  merge(lvec.begin(), lvec.end(), rvec.begin(), rvec.end(), back_inserter(nw));
+  nw.erase(unique(nw.begin(), nw.end()), nw.end());
+  if ((int) nw.size() != (int) a.size()) {
+    lans += y;
+    nw = vector<int>(0);
+  }
+  return make_pair(nw, lans + rans);
+}
+
+long long cal(int l, int r) {
+  int n = r - l + 1;
+  vector<int> st(n);
+  iota(st.begin(), st.end(), l);
+  return answer(st, 0).second;
+}
+ 
+struct SegTree {
+  vector<int> tree;
+  int n;
+
+  void build(int v, int l, int r) {
+    tree[v] = cal(l, r);
+    if (l == r) {
+      return;
+    }
+    int mid = (l + r) >> 1;
+    int rv = v + ((l - mid + 1) << 1);
+    build(v + 1, l, mid);
+    build(rv, mid + 1, r); 
+  }
+  
+  long long get(int v, int l, int r, int ll, int rr) {
+    if (l >= ll && rr >= r) {
+      return tree[v];
+    }
+
+    int mid = (l + r) >> 1;
+    int rv = v + ((l - mid + 1) << 1);
+    long long res = 0;
+    if (mid >= ll) {
+      res += get(v + 1, l, mid, ll, rr);
+    }
+
+    if (mid < rr) {
+      res += get(rv, mid + 1, r, ll, rr);
+    }
+    return res;
+  }
+  
+  SegTree(vector<int> a) {
+    n = (int) a.size();
+    tree.resize((n << 1) - 1);
+    build(0, 0, n - 1);
+  }
+
+  long long get(int l, int r) {
+    assert(l <= r && l >= 0 && r < n);
+    return get(0, 0, n - 1, l, r);
+  }
+};
+
+int main() {
+  ios_base::sync_with_stdio(false);
+  cin.tie(0);
+  int n;
+  cin >> n >> x >> y;
+  y += x;
+  m.resize(n);
+  for (int i = 0; i < n; ++i) {
+    cin >> m[i];
+    --m[i];
+  }
+
+  SegTree st(a);
+  int q;
+  cin >> q; 
+  while (q--) {
+    int l, r;
+    cin >> l >> r;
+    cout << 0LL + x + st.get(l - 1, r - 1) << '\n';
+  }
+}
