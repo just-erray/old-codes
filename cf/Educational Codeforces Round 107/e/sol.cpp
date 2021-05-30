@@ -175,20 +175,44 @@ int main() {
   cin.tie(0);
   int n, m;
   cin >> n >> m;
-  vector<vector<bool>> can(n, vector<bool>(m));
+  vector<string> mat(n);
   for (int i = 0; i < n; ++i) {
-    string s;
-    cin >> s;
+    cin >> mat[i];
+  }
+
+  const int N = max(n, m) + 1;
+  vector<int> ct(N);
+  int sum = 0;
+  for (int i = 0; i < n; ++i) {
+    int now = 0;
     for (int j = 0; j < m; ++j) {
-      can[i][j] = s[j] != '*';
+      if (mat[i][j] ==  '*'){ 
+        now = 0;
+      } else {
+        ++now;
+        ++sum;
+      }
+      ++ct[now];
     }
   }
 
-  vector<vector<Mint>> dp(n + 1, vector<Mint>(k + 1, 1));
-  for (int i = n - 1; i >= 0; --i) {
-    for (int j = m - 1; j >= 0; --j) {
-      
+  for (int j = 0; j < m; ++j) {
+    int now = 0;
+    for (int i = 0; i < n; ++i) : while (true) {
+      if (mat[i][j] == '*'){
+        now = 0;
+      } else {
+        ++now;
+      }
+      ++ct[now];
     }
   }
-  cout << dp[0][0] << '\n';
+
+  Mint ans = 0;
+  Mint cur = 0;
+  for (int i = 2; i < N; ++i) {
+    cur += 1 / power(Mint(2), i) * (i % 2 ? -1 : 1);
+    ans += cur * ct[i];
+  }
+  cout << ans * power(Mint(2), sum) << '\n';
 }

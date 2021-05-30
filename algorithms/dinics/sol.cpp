@@ -1,87 +1,68 @@
 // author: erray
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
  
 using namespace std;
-struct Dinics {
-  int start, end;
-  long long res = 0;
+ 
+struct dinics {
   struct edge {
-    int to, cap;
-    int flow = 0;
-  };                               
-  
-  vector<vector<edge>> g;
-  vector<int> level;
-  Dinics(int _start, int _end, int n) : start(_start), end(_end) {
-    level.assign(n, -1);
-    g.assign(n, vector<edge>());
-  }
+    int v, u, flow, cap;
+    edge(int _v, int _u, int _cap) : v(_v), u(_u), cap(_cap), flow(0) { }
+  };
 
-  void add(int v, int u, int cap) {
-    g[v].push_back(edge{u, cap});
-    g[u].push_back(edge{v, cap});
+  vector<edge> es;
+  vector<int> level;
+  vector<int> p;
+  vector<vector<int>> g;
+  int s, t;
+
+  dinics(int n, int _s, int _t) : s(_s), t(_t) {
+    g.resize(n);
+    p.resize(n);
+    level.resize(n); 
   }
 
   bool bfs() {
     queue<int> que;
-    level.assign((int) level.size(), -1);
-    que.push(start);
-    level[start] = 0;
+    que.push(s);
+    fill(level.begin(), level.end(), -1);
+    level[0] = 0;
     while (!que.empty()) {
       int v = que.front();
       que.pop();
-      for (auto[u, cap, flow] : g[v]) {
-        if (level[u] != -1 && flow < cap) {
-          level[u] = level[v] + 1;
-          que.push(u);
+      for (auto id : g[v]) {
+        if (level[es[id].u] != -1 || es[id].flow == es[id].cap) {
+          continue;
         }
+        level[es[id].u] = level[v] + 1;
+        que.push(es[id].u);
       }
     }
-    return level[end] != -1;
+    return level[t] != -1;  
   }
 
-  int dfs(int v, int aug) {
-    if (v == end || aug == 0) {
-      return aug;
-    }  
-    for (auto[u, cap, flow] : g[v]) {
-      if (cap == flow || level[u] != level[v] + 1) {
+  long long dfs(int v, long long mn) {
+    if (mn == 0) {
+      return 0;
+    }
+    if (v == t) {
+      return mn;
+    }
+    for (int c& = p[v]; c < int(edges[v].size()); ++c) {
+      int id = g[v][c];
+      if (es[id].flow == es[id].cap || level[es[id].u] <= level[v]) {
         continue;
       }
-      int a = dfs(u, min(aug, cap - flow));
-      if (a) {
-        flow += a;
-        if (v == start) {
-          res += a; 
-        }
-        return a;
-      } else {
-        flow = cap;
+      long long go = dfs(es[id].u, min(mn, es[id].cap - es[id].flow));
+      if (go == 0) {
+        continue;
       }
+      edges[id].flow += 
     }
-    return 0;
-  }
-
-  long long get() {
-    while (!bfs()) {
-      dfs(0, INT_MAX);
-    }
-
-    return res;
   }
 };
- 
-int main () {
+
+int main() {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
-  int n, m;
-  cin >> n >> m;
-  Dinics flow(0, n - 1, n);
-  while (m--) {
-    int x, y, c;
-    cin >> x >> y >> c;
-    --x, --y;
-    flow.add(x, y, c);
-  }
-  cout << flow.get() << '\n';
+  
 }

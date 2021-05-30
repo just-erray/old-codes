@@ -1,0 +1,1 @@
+g++ -O2 -std=c++11 -ggdb3 -Wl,--stack=268435456 -Wall -Wextra -Wshadow -Wconversion -Wfatal-errors -DDEBUG -DLOCAL -D_GLIBCXX_DEBUG  -o grader.exe grader.cpp chameleon.cpp
